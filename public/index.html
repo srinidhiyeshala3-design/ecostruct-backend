@@ -1,0 +1,567 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoStruct - C&D Waste Calculator</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f7f2;
+      margin: 0;
+      padding: 25px;
+      color: #20352a;
+    }
+
+    .container {
+      max-width: 650px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px #00000015;
+    }
+
+    h1 { color: #217346; }
+
+    label {
+      display: block;
+      margin-top: 18px;
+      font-weight: bold;
+    }
+
+    select, input, button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 7px;
+      font-size: 16px;
+    }
+
+    button {
+      background: #217346;
+      color: white;
+      border: none;
+      cursor: pointer;
+      margin-top: 22px;
+    }
+
+    button:hover { background: #165a35; }
+
+    #result {
+      margin-top: 20px;
+      padding: 15px;
+      background: #e6f4ea;
+      border-radius: 8px;
+      display: none;
+      overflow-wrap: anywhere;
+    }
+
+    .note {
+      font-size: 13px;
+      color: #555;
+    }
+    
+/* EcoStruct green dashboard theme */
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f2f7f3;
+    color: #24352a;
+}
+
+.container {
+    width: min(1100px, 92%);
+    margin: 30px auto;
+    padding: 26px;
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 6px 25px rgba(25, 80, 45, 0.08);
+}
+
+h1 {
+    color: #176b3a;
+    margin-bottom: 8px;
+}
+
+h2, h3 {
+    color: #216b3d;
+}
+
+input, select {
+    box-sizing: border-box;
+    max-width: 100%;
+    padding: 11px;
+    border: 1px solid #d4e3d7;
+    border-radius: 8px;
+    background: #ffffff;
+    font-size: 15px;
+}
+
+button {
+    background: #218747;
+    color: white;
+    border: none;
+    border-radius: 9px;
+    padding: 13px 20px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+button:hover {
+    background: #176b36;
+}
+
+/* Dashboard summary cards */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    margin: 22px 0;
+}
+
+.dashboard-card {
+    padding: 20px;
+    border: 1px solid #dceade;
+    border-radius: 14px;
+    background: #f7fbf7;
+}
+
+.dashboard-card .card-label {
+    display: block;
+    color: #607565;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.dashboard-card .card-value {
+    display: block;
+    color: #176b3a;
+    font-size: 25px;
+    font-weight: bold;
+    overflow-wrap: anywhere;
+}
+
+.dashboard-section {
+    margin-top: 25px;
+    padding: 20px;
+    border: 1px solid #e0eae2;
+    border-radius: 14px;
+    background: #ffffff;
+}
+
+.table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+}
+
+.dashboard-table th,
+.dashboard-table td {
+    padding: 13px 12px;
+    border-bottom: 1px solid #e5eee7;
+    text-align: left;
+}
+
+.dashboard-table th {
+    background: #eaf5ec;
+    color: #215b35;
+}
+
+.dashboard-table tr:hover {
+    background: #f7fbf7;
+}
+
+.estimate-note {
+    margin-top: 18px;
+    padding: 13px;
+    border-left: 4px solid #d3a43b;
+    border-radius: 5px;
+    background: #fff9e9;
+    color: #67552b;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+@media (max-width: 700px) {
+    .container {
+        padding: 16px;
+    }
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-card .card-value {
+        font-size: 22px;
+    }
+
+    .dashboard-section {
+        padding: 12px;
+    }
+}
+
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>EcoStruct</h1>
+    <p>Construction and Demolition Waste Calculator</p>
+
+    <h2>Floor Configuration</h2>
+
+    <label for="buildingType">Building Type</label>
+    <select id="buildingType">
+      <option value="residential">Residential</option>
+      <option value="commercial">Commercial</option>
+    </select>
+
+    
+<label for="floors">Number of Floors</label>
+<select id="floors" onchange="updateFloors()">
+  <option value="1">Single Floor (G)</option>
+  <option value="2">G+1 (2 floors)</option>
+  <option value="custom">Custom Floor Count</option>
+</select>
+
+<div id="customSection" style="display: none;">
+  <label for="customFloors">Total Number of Floors</label>
+  <input
+    type="number"
+    id="customFloors"
+    min="1"
+    max="100"
+    placeholder="Example: 3 for G+2"
+    onchange="updateFloors()"
+  >
+</div>
+
+<div id="floorAreas">
+  <label for="area1">Ground Floor Area (sq. ft.)</label>
+  <input
+    type="number"
+    id="area1"
+    min="1"
+    step="any"
+    placeholder="Enter ground floor area"
+  >
+</div>
+
+<label for="structure">Structure Type</label>
+<select id="structure">
+  <option value="rcc">RCC Framed Structure</option>
+  <option value="load">Load-Bearing Structure</option>
+</select>
+
+<label for="age">Building Age (years)</label>
+<input
+  type="number"
+  id="age"
+  min="0"
+  step="any"
+  placeholder="Enter building age"
+>
+
+<button id="calculateButton" onclick="showConfiguration()">
+  Calculate C&D Waste
+</button>
+
+<div id="result" aria-live="polite"></div>
+
+  </div>
+
+  <script>
+    function getFloorCount() {
+      const selection = document.getElementById("floors").value;
+
+      if (selection === "custom") {
+        const value = document.getElementById("customFloors").value;
+
+        if (value.trim() === "") return 0;
+
+        return Number(value);
+      }
+
+      return Number(selection);
+    }
+
+    function updateFloors() {
+      const selection = document.getElementById("floors").value;
+      const customSection = document.getElementById("customSection");
+      const floorAreas = document.getElementById("floorAreas");
+
+      customSection.style.display =
+        selection === "custom" ? "block" : "none";
+
+      const count = getFloorCount();
+
+      if (!Number.isInteger(count) || count < 1 || count > 100) {
+        floorAreas.innerHTML = "";
+        return;
+      }
+
+      // Preserve entered areas when the floor count changes.
+      const previousAreas = {};
+
+      floorAreas.querySelectorAll("input").forEach(input => {
+        previousAreas[input.id] = input.value;
+      });
+
+      floorAreas.innerHTML = "";
+
+      for (let i = 1; i <= count; i++) {
+        const label = document.createElement("label");
+        label.htmlFor = `area${i}`;
+
+        if (i === 1) {
+          label.textContent = "Ground Floor Area (sq. ft.)";
+        } else {
+          label.textContent = `Floor ${i - 1} Area (sq. ft.)`;
+        }
+
+        const input = document.createElement("input");
+        input.type = "number";
+        input.id = `area${i}`;
+        input.min = "1";
+        input.step = "any";
+        input.placeholder = `Enter area of floor ${i}`;
+        input.value = previousAreas[`area${i}`] || "";
+
+        floorAreas.appendChild(label);
+        floorAreas.appendChild(input);
+      }
+    }
+
+    async function showConfiguration() {
+      const type = document.getElementById("buildingType").value;
+      
+      const structure = document.getElementById("structure").value;
+      const ageInput = document.getElementById("age").value;
+
+      const floors = getFloorCount();
+      const result = document.getElementById("result");
+      const button = document.getElementById("calculateButton");
+
+      if (!Number.isInteger(floors) || floors < 1 || floors > 100) {
+        alert("Please select or enter a valid floor count.");
+        return;
+      }
+
+      let totalArea = 0;
+      const individualAreas = [];
+
+      for (let i = 1; i <= floors; i++) {
+        const floorInput = document.getElementById(`area${i}`);
+
+        if (!floorInput || floorInput.value.trim() === "") {
+          alert(`Please enter the area of floor ${i}.`);
+          return;
+        }
+
+        const floorArea = Number(floorInput.value);
+
+        if (!Number.isFinite(floorArea) || floorArea <= 0) {
+          alert(`Please enter a valid area for floor ${i}.`);
+          return;
+        }
+
+        individualAreas.push(floorArea);
+        totalArea += floorArea;
+      }
+
+      const age = Number(ageInput);
+
+      if (
+        ageInput.trim() === "" ||
+        !Number.isFinite(age) ||
+        age < 0
+      ) {
+        alert("Please enter a valid building age.");
+        return;
+      }
+
+     
+      
+
+      const floorLabel =
+        floors === 1 ? "Single Floor (G)" : `G+${floors - 1}`;
+
+      result.style.display = "block";
+      result.textContent = "Calculating estimated C&D waste...";
+      button.disabled = true;
+      button.textContent = "Calculating...";
+
+      try {
+        // Send the SUM of all floor areas to the backend.
+        const response = await fetch("/api/calculate", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            area: totalArea,
+            floors: floors,
+            age: age
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Calculation failed.");
+        }
+
+        result.innerHTML = "";
+
+        const heading = document.createElement("h3");
+        heading.textContent = "EcoStruct Results";
+        result.appendChild(heading);
+
+        const details = [
+          ["Building type", type],
+          ["Floor configuration", floorLabel],
+          ["Number of floors", String(floors)],
+         
+          ["Structure", structure === "rcc" ? "RCC framed" : "Load-bearing"],
+          ["Building age", `${age} years`]
+        ];
+
+        individualAreas.forEach((area, index) => {
+          const name = index === 0
+            ? "Ground floor area"
+            : `Floor ${index} area`;
+
+          details.push([name, `${area.toLocaleString()} sq. ft.`]);
+        });
+
+        details.push([
+          "Total building area",
+          `${totalArea.toLocaleString()} sq. ft.`
+        ]);
+
+        details.forEach(([label, value]) => {
+          const p = document.createElement("p");
+          const strong = document.createElement("strong");
+          strong.textContent = `${label}: `;
+          p.appendChild(strong);
+          p.appendChild(document.createTextNode(value));
+          result.appendChild(p);
+        });
+
+        const divider = document.createElement("hr");
+        result.appendChild(divider);
+
+        const wasteHeading = document.createElement("h3");
+        wasteHeading.textContent = "Estimated C&D Waste";
+        result.appendChild(wasteHeading);
+
+        const waste = document.createElement("p");
+        const wasteStrong = document.createElement("strong");
+        wasteStrong.textContent =
+          `${data.estimatedWasteTonnes} tonnes`;
+        waste.appendChild(wasteStrong);
+        result.appendChild(waste);
+
+        const note = document.createElement("p");
+       note.className = "estimate-note";
+        note.textContent = data.note ||
+          "Preliminary estimate. Validate against local demolition data.";
+        result.appendChild(note);
+
+        
+        const productsHeading = document.createElement("h3");
+        productsHeading.textContent = "Recoverable Recycled Products";
+        result.appendChild(productsHeading);
+
+        if (Array.isArray(data.products) && data.products.length > 0) {
+          const tableWrapper = document.createElement("div");
+tableWrapper.className = "table-wrapper";
+
+const table = document.createElement("table");
+table.className = "dashboard-table";
+          const headerRow = document.createElement("tr");
+
+          ["Product", "Quantity (tonnes)", "Price/tonne (₹)", "Estimated value (₹)"]
+            .forEach((headingText) => {
+              const th = document.createElement("th");
+              th.textContent = headingText;
+              th.style.border = "1px solid #ccc";
+              th.style.padding = "8px";
+              th.style.textAlign = "left";
+              headerRow.appendChild(th);
+            });
+
+          table.appendChild(headerRow);
+
+          data.products.forEach((product) => {
+            const row = document.createElement("tr");
+
+            [
+              product.name,
+              Number(product.quantityTonnes).toFixed(2),
+              Number(product.pricePerTonne).toLocaleString("en-IN"),
+              Number(product.estimatedValue).toLocaleString("en-IN", {
+                maximumFractionDigits: 2
+              })
+            ].forEach((value) => {
+              const cell = document.createElement("td");
+              cell.textContent = value;
+              cell.style.border = "1px solid #ccc";
+              cell.style.padding = "8px";
+              row.appendChild(cell);
+            });
+
+            table.appendChild(row);
+          });
+
+          tableWrapper.appendChild(table);
+          result.appendChild(tableWrapper);
+
+         const totalValue = document.createElement("p");
+const formattedValue = Number(data.totalEstimatedValue)
+  .toLocaleString("en-IN", { maximumFractionDigits: 2 });
+
+totalValue.innerHTML =
+  "<strong>Total estimated product value: ₹</strong>";
+totalValue.appendChild(document.createTextNode(formattedValue));
+result.appendChild(totalValue);
+
+} else {
+  const message = document.createElement("p");
+  message.textContent =
+    "Product estimates are not available. Please check the backend.";
+  result.appendChild(message);
+}
+      } catch (error) {
+        result.innerHTML = "";
+
+        const heading = document.createElement("h3");
+        heading.textContent = "Unable to Calculate";
+        result.appendChild(heading);
+
+        const message = document.createElement("p");
+        message.textContent = error.message;
+        result.appendChild(message);
+      } finally {
+        button.disabled = false;
+        button.textContent = "Calculate C&D Waste";
+      }
+    }
+
+    // Initialize the floor inputs.
+    updateFloors();
+  </script>
+</body>
+</html>
